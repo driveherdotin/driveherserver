@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 require("express-async-errors");
 
 const EventEmitter = require("events");
@@ -11,7 +12,6 @@ const connectDB = require("./connect");
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
 const authMiddleware = require("./middleware/authentication");
-const twilio = require("twilio");  // Import Twilio
 
 // Routers
 const authRouter = require("./routes/auth");
@@ -36,37 +36,6 @@ app.use((req, res, next) => {
 // Initialize the WebSocket handling logic
 handleSocketConnection(io);
 
-// Twilio setup for sending SMS
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
-// Predefined receiver phone number (replace with your own dummy number)
-const predefinedPhoneNumber = "+916202831780";  // This is the number the alert will be sent to
-
-const sendAlert = (message) => {
-  return client.messages.create({
-    body: message,
-    from: process.env.TWILIO_PHONE_NUMBER,  // Your Twilio phone number
-    to: predefinedPhoneNumber,  // Send alert to the predefined phone number
-  });
-};
-
-// Emergency Alert Route
-app.post("/send-alert", async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ error: "Message is required" });
-  }
-
-  try {
-    await sendAlert(message);  // Send SMS with the provided message
-    return res.status(200).json({ success: "Emergency alert sent successfully bro!" });
-  } catch (error) {
-    console.error("Failed to send SMS", error);
-    return res.status(500).json({ error: "Failed to send SMS" });
-  }
-});
-
 // Routes
 app.use("/auth", authRouter);
 app.use("/ride", authMiddleware, rideRouter);
@@ -79,7 +48,11 @@ const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
 
+    // Uncomment this and comment below one if you want to run on ip address so that you can
+    // access api in physical device
+
     server.listen(process.env.PORT || 3000, "0.0.0.0", () =>
+    // server.listen(process.env.PORT || 3000, () =>
       console.log(
         `HTTP server is running on port http://localhost:${
           process.env.PORT || 3000
