@@ -76,5 +76,8 @@ const start = async () => {
     console.error("Failed to start server:", error);
   }
 };
+console.log(process.env.TWILIO_ACCOUNT_SID);
+console.log(process.env.TWILIO_AUTH_TOKEN);
+console.log(process.env.TWILIO_PHONE_NUMBER);
 
 start();
